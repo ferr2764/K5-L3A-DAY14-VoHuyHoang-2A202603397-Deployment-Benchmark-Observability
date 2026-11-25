@@ -37,14 +37,23 @@ curl.exe -X POST http://localhost:8000/ask -H "Content-Type: application/json" -
 ## Part 2: Docker
 
 ### Exercise 2.1: Dockerfile questions
-1. Base image: [Your answer]
-2. Working directory: [Your answer]
-...
+1. **Base image:** `python:3.11` (bản full Python distribution, dung lượng lớn ~1 GB).
+2. **Working directory:** `/app` (`WORKDIR /app`).
+3. **Tại sao `COPY requirements.txt` đứng trước `COPY app.py`:** Để tận dụng **Docker layer cache** — khi chỉ sửa source code (`app.py`) mà không thay đổi `requirements.txt`, Docker sẽ dùng lại layer đã `pip install` trước đó thay vì cài lại từ đầu.
+4. **Port & Command mặc định:** `EXPOSE 8000` và `CMD ["python", "app.py"]`.
 
 ### Exercise 2.3: Image size comparison
-- Develop: [X] MB
-- Production: [Y] MB
-- Difference: [Z]%
+- **Develop (`my-agent:develop`):** 1.67 GB (1670 MB)
+- **Production (`my-agent:advanced`):** 240 MB
+- **Difference:** Giảm ~85.6% (nhờ dùng multi-stage build với `python:3.11-slim` ở stage runtime, bỏ lại build tools)
+
+### Exercise 2.4: Docker Compose stack
+- **Sơ đồ các service:** `Client` → `nginx` (port 80/443, reverse proxy) → `agent` (port 8000, FastAPI) ↔ `redis` (6379) & `qdrant` (6333–6334) trong mạng `production_internal`.
+- **Kết quả test qua Nginx:**
+```powershell
+curl.exe http://localhost/health
+# {"status":"ok","uptime_seconds":33.1,"version":"2.0.0","timestamp":"2026-11-25T08:02:33.727319"}
+```
 
 ## Part 3: Cloud Deployment
 
