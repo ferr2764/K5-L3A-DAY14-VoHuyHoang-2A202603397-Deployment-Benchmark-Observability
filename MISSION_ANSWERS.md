@@ -113,3 +113,13 @@ retry-after: 59
 - **Kết quả `test_stateless.py` với `--scale agent=3`:**
   - 5 request được phục vụ bởi cả 3 instance (`instance-af004a`, `instance-3a4ed5`, `instance-0dc80d`).
   - Lịch sử hội thoại vẫn giữ đủ **10 messages** (5 user + 5 assistant) nhờ lưu qua Redis.
+
+## AI Log
+- **Công cụ sử dụng:** Antigravity AI Assistant.
+- **Phạm vi hỗ trợ của AI:**
+  - Giải thích lộ trình và hướng dẫn từng bước theo các checkpoint (CP0–CP8).
+  - Hỗ trợ biên tập, trình bày tài liệu và báo cáo (`MISSION_ANSWERS.md`, `DEPLOYMENT.md`, `BENCHMARK_REPORT.md`).
+- **Phần tự thực hiện và kiểm chứng:**
+  - Tự đọc code mẫu, tự hoàn thiện toàn bộ các mục TODO trong `06-lab-complete/` và chạy `check_production_ready.py`.
+  - Tự thao tác Docker, deploy lên Railway (cấu hình Redis, biến môi trường, kiểm tra 4 endpoint `/health`, `/ready`, `/ask` 401/200).
+  - Tự chạy toàn bộ benchmark (`load_test.py`, `run_eval.py`, Locust `scale_1` & `scale_3`) và đối chiếu số liệu từ các file JSON/CSV thật.
