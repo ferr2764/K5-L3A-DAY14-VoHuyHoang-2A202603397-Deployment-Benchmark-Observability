@@ -64,10 +64,33 @@ curl.exe http://localhost/health
 ## Part 4: API Security
 
 ### Exercise 4.1-4.3: Test results
-[Paste your test outputs]
+**1. API Key (`develop/app.py`) — 401 & 200:**
+```powershell
+# Không có X-API-Key → 401 Unauthorized
+HTTP/1.1 401 Unauthorized
+{"detail":"Missing API key. Include header: X-API-Key: <your-key>"}
+
+# Có X-API-Key → 200 OK
+HTTP/1.1 200 OK
+{"question":"Hello","answer":"Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đi nhé."}
+```
+
+**2. JWT + Rate Limiting (`production/app.py`) — 200 & 429 (tài khoản `student`, đã che token):**
+```powershell
+# Request 1..10 (Authorization: Bearer <REDACTED_TOKEN>) → 200 OK
+{"question":"Hello","answer":"Agent đang hoạt động tốt! (mock response) Hỏi thêm câu hỏi đi nhé.","usage":{"requests_remaining":0,"budget_remaining_usd":0.000181}}
+
+# Request 11 → 429 Too Many Requests
+HTTP/1.1 429 Too Many Requests
+x-ratelimit-limit: 10
+x-ratelimit-remaining: 0
+retry-after: 59
+{"detail":{"error":"Rate limit exceeded","limit":10,"window_seconds":60,"retry_after_seconds":59}}
+```
 
 ### Exercise 4.4: Cost guard implementation
-[Explain your approach]
+- **Rate limit** chỉ giới hạn *tốc độ* (số request/phút) để chống spam/DoS, nhưng một request hợp lệ vẫn có thể gửi prompt rất dài gây tốn nhiều token.
+- **Cost guard** bảo vệ *ngân sách*: theo dõi tổng chi phí (hoặc số token) tích lũy theo user/ngày (lưu trong Redis/DB). Trước khi gọi LLM, kiểm tra nếu vượt ngưỡng ngân sách (`budget_remaining_usd <= 0`) thì chặn ngay với mã lỗi `402 Payment Required`. Cần kết hợp cả hai để vừa chống flood vừa chống đội chi phí API.
 
 ## Part 5: Scaling & Reliability
 
