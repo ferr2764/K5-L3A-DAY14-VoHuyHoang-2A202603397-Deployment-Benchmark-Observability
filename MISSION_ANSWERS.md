@@ -95,4 +95,10 @@ retry-after: 59
 ## Part 5: Scaling & Reliability
 
 ### Exercise 5.1-5.5: Implementation notes
-[Your explanations and test results]
+- **Liveness (`/health`) vs Readiness (`/ready`):**
+  - `/health` kiểm tra process app còn sống hay không (trả `200 OK` kể cả khi Redis tạm mất, để platform không restart oan).
+  - `/ready` kiểm tra app đã sẵn sàng nhận traffic chưa (ping Redis; nếu mất kết nối Redis thì trả `503 Service Unavailable` để load balancer ngừng route traffic tới instance đó).
+- **Vì sao state trong RAM bị hỏng khi scale nhiều instance:** Nếu lưu session/rate-limit trong RAM của từng container, khi Nginx chia tải sang instance khác thì instance mới không có dữ liệu cũ → mất lịch sử chat hoặc đếm sai rate limit. Lưu state tập trung vào **Redis** giúp mọi instance đều stateless và dùng chung state.
+- **Kết quả `test_stateless.py` với `--scale agent=3`:**
+  - 5 request được phục vụ bởi cả 3 instance (`instance-af004a`, `instance-3a4ed5`, `instance-0dc80d`).
+  - Lịch sử hội thoại vẫn giữ đủ **10 messages** (5 user + 5 assistant) nhờ lưu qua Redis.
