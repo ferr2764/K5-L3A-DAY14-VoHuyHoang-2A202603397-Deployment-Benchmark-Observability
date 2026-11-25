@@ -9,6 +9,30 @@ Yêu cầu:
 """
 
 
+import time
+import uuid
+from fastapi import HTTPException
+
+from app.config import settings
+from app.redis_client import r
+
+
 def check_rate_limit(key: str) -> None:
-    # TODO: gợi ý dùng Redis sorted set: ZREMRANGEBYSCORE → ZCARD → ZADD → EXPIRE
-    raise NotImplementedError("TODO: check_rate_limit")
+    now = time.time()
+    window = 60
+    redis_key = f"rate_limit:{key}"
+
+    pipe = r.pipeline()
+    pipe.zremrangebyscore(redis_key, 0, now - window)
+    pipe.zcard(redis_key)
+    _, count = pipe.execute()
+
+    if count >= settings.rate_limit_per_minute:
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded",
+            headers={"Retry-After": str(window)},
+        )
+
+    r.zadd(redis_key, {f"{now}:{uuid.uuid4().hex}": now})
+    r.expire(redis_key, window)
