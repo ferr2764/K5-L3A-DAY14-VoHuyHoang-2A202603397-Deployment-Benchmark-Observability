@@ -58,8 +58,19 @@ curl.exe http://localhost/health
 ## Part 3: Cloud Deployment
 
 ### Exercise 3.1: Railway deployment
-- URL: https://your-app.railway.app
-- Screenshot: [Link to screenshot in repo]
+- **URL:** `https://k5-l3a-day14-vohuyhoang-2a202603397-deployment-b-production.up.railway.app`
+- **Screenshots:** `screenshots/dashboard.png`, `screenshots/running.png`, `screenshots/test.png`
+- **Kết quả 4 lệnh tự kiểm:** `/health` → `200`, `/ready` → `200`, `/ask` không key → `401`, `/ask` có key → `200`.
+
+### So sánh `railway.toml` và `render.yaml`
+- **`railway.toml`:** Khai báo ngắn gọn theo từng service (`[build]` chỉ định `DOCKERFILE`, `[deploy]` chỉ định `healthcheckPath`, `restartPolicyType`); Redis và biến môi trường liên kết trực tiếp trên Dashboard (`${{Redis.REDIS_URL}}`).
+- **`render.yaml`:** Là Infrastructure-as-Code (Blueprint) khai báo toàn bộ stack trong một file (gồm cả `web` service, `redis` service, `envVars` dùng `fromService` để lấy connection string), phù hợp khi muốn tái tạo toàn bộ hạ tầng bằng Git.
+
+### Exercise 3.3: Cloud Run CI/CD (`cloudbuild.yaml` & `service.yaml`)
+Pipeline trong `03-cloud-deployment/production-cloud-run/` đi qua các bước:
+1. Build Docker image từ source và gắn tag theo `$COMMIT_SHA` / `latest`.
+2. Push image lên Artifact Registry / Container Registry.
+3. Deploy image mới lên **Google Cloud Run** (`gcloud run deploy` hoặc áp dụng `service.yaml` với cấu hình `PORT`, `minScale`/`maxScale`, resource limits và readiness/liveness probe).
 
 ## Part 4: API Security
 
